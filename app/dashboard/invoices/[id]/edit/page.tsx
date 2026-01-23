@@ -1,15 +1,23 @@
 import Form from '@/app/ui/invoices/edit-form';
 import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
 import { fetchCustomers, fetchInvoiceById } from '@/app/lib/data';
+import { notFound } from 'next/navigation';
  
 export default async function Page(props: {params: Promise<{ id: string }>}) {
 
-    const params = await props.params;
-    const id = params.id;
-    const [ invoice, customers ] = await Promise.all([
-        fetchInvoiceById(id),
-        fetchCustomers(),
-    ]);
+  const params = await props.params;
+  const id = params.id;
+  const [ invoice, customers ] = await Promise.all([
+      fetchInvoiceById(id),
+      fetchCustomers(),
+  ]);
+  
+  // notFound will take precedence over error.tsx, 
+  // so you can reach out for it when you want to handle more specific errors!
+  if (!invoice) {
+    notFound();
+  }
+
   return (
     <main>
       <Breadcrumbs
