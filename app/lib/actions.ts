@@ -1,6 +1,8 @@
 // Note: Any functions included in this file that are not used will be automatically removed from the final application bundle.
 'use server'; // you mark all the exported functions within the file as Server Actions
 
+import { signIn } from '@/auth';
+import { AuthError } from 'next-auth';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -72,6 +74,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
     // To avoid this, you can call redirect after try/catch. redirect would only be reachable if try is successful.
     redirect('/dashboard/invoices');
 }
+
 // export async function updateInvoice(id: string, formData: FormData) {
 export async function updateInvoice(id: string, prevState: State, formData: FormData) {
     // const { customerId, amount, status } = UpdateInvoice.parse({
@@ -111,4 +114,23 @@ export async function deleteInvoice(id: string) {
 
     await sql`DELETE FROM invoices WHERE id = ${id}`;
     revalidatePath('/dashboard/invoices');
+}
+
+export async function authenticate(
+    prevState: string | undefined,
+    formData: FormData,
+) {
+    try {
+        await signIn('credentials', formData);
+    } catch (error) {
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return 'Invalid credentials.';
+                default:
+                    return 'Something went wrong.';
+            }
+        }
+        throw error;
+    }
 }
